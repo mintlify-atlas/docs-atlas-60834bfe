@@ -1,0 +1,50 @@
+{
+  "projectType": "general",
+  "projectName": "Data Analyzer",
+  "projectDescription": "A Python desktop application with a tkinter GUI for loading CSV files and performing statistical analysis using pandas.",
+  "theme": "mint",
+  "primaryColor": "#2563EB",
+  "lightColor": "#DBEAFE",
+  "darkColor": "#1E3A8A",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["introduction", "quickstart"]
+          },
+          {
+            "group": "Guides",
+            "pages": ["guides/loading-csv", "guides/statistical-analysis", "guides/column-selection"]
+          },
+          {
+            "group": "Reference",
+            "pages": ["reference/analyzer", "reference/gui"]
+          },
+          {
+            "group": "Help",
+            "pages": ["faq"]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Load and preview CSV files through a graphical interface",
+    "Generate descriptive statistical summaries (count, mean, std, min, max, percentiles)",
+    "Analyze all columns or select specific columns for targeted analysis",
+    "Handles both numeric and categorical columns via pandas describe(include='all')",
+    "Displays results in a readable grid table format using tabulate",
+    "Scrollable results pane for navigating large datasets"
+  ],
+  "publicApiSurface": [
+    "generar_resumen_estadistico(df) — generates a statistical summary table from a pandas DataFrame",
+    "analizar_csv(ruta_archivo) — reads a CSV file and returns its statistical summary",
+    "DataAnalyzerApp(ventana) — tkinter application class for the graphical interface",
+    "DataAnalyzerApp.cargar_csv() — opens a file dialog to load a CSV file",
+    "DataAnalyzerApp.analizar_todo() — analyzes all columns of the loaded DataFrame",
+    "DataAnalyzerApp.mostrar_selector_columnas() — shows column selection dialog for partial analysis"
+  ]
+}
