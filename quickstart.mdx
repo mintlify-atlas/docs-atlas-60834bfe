@@ -75,10 +75,14 @@ description: "Install Data Analyzer and run your first CSV statistical analysis 
 
 You can also use the analysis functions directly in Python without the GUI.
 
+<Note>
+  The import paths below assume your script runs from within the `src/` directory, or that `src/` is on your Python path. This matches how `gui.py` imports from `analyzer`.
+</Note>
+
 ### Analyze a CSV file from a path
 
-```python src/example_usage.py
-from src.analyzer import analizar_csv
+```python example_usage.py
+from analyzer import analizar_csv
 
 result = analizar_csv("data/sales.csv")
 if result is not None:
@@ -91,7 +95,7 @@ else:
 
 ```python
 import pandas as pd
-from src.analyzer import generar_resumen_estadistico
+from analyzer import generar_resumen_estadistico
 
 df = pd.read_csv("data/sales.csv")
 summary = generar_resumen_estadistico(df)
@@ -102,7 +106,7 @@ print(summary)
 
 ```python
 import pandas as pd
-from src.analyzer import generar_resumen_estadistico
+from analyzer import generar_resumen_estadistico
 
 df = pd.read_csv("data/sales.csv")
 # Select only the columns you care about

@@ -123,18 +123,18 @@ assert resumen is None
 ```
 
 <Note>
-  `analizar_csv` is used by the command-line path. The GUI (`gui.py`) reads the CSV independently with `pd.read_csv()` and calls `generar_resumen_estadistico()` directly, passing the DataFrame.
+  The GUI (`gui.py`) reads the CSV independently using `pd.read_csv()` and calls `generar_resumen_estadistico()` directly with the resulting DataFrame. `analizar_csv` is a standalone convenience function for programmatic use — it is not called by the GUI.
 </Note>
 
 ---
 
 ## Related
 
-<Columns cols={2}>
+<CardGroup cols={2}>
   <Card title="GUI reference" icon="window" href="/reference/gui">
     Reference for `DataAnalyzerApp` — the tkinter interface that calls these functions.
   </Card>
   <Card title="Getting started" icon="rocket" href="/">
     Install dependencies and run Data Analyzer for the first time.
   </Card>
-</Columns>
+</CardGroup>

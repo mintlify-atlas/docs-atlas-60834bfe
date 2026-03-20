@@ -20,14 +20,14 @@ If your data fits in a CSV file and you want to understand its shape, distributi
 
 The application is split into two modules that work together:
 
-<Columns cols={2}>
+<CardGroup cols={2}>
   <Card title="analyzer.py" icon="flask" href="/reference/analyzer">
     Core logic module. Contains the statistical engine built on pandas. Can also be used as a standalone Python library without the GUI.
   </Card>
   <Card title="gui.py" icon="desktop" href="/reference/gui">
     Graphical interface module built with tkinter. Handles file selection, data preview, analysis options, and result display.
   </Card>
-</Columns>
+</CardGroup>
 
 When you load a CSV file through the GUI, `gui.py` reads it into a pandas DataFrame and passes it to `analyzer.py`, which runs `describe(include='all')` and returns a formatted grid table. The result is displayed in a scrollable text area inside the application window.
 
@@ -74,17 +74,17 @@ The output is formatted using `tabulate` with the `grid` style, producing an ali
 
 ## Project structure
 
-<Tree>
-  <Tree.Folder name="src" defaultOpen>
-    <Tree.File name="analyzer.py" />
-    <Tree.File name="gui.py" />
-  </Tree.Folder>
-  <Tree.File name="requirements.txt" />
-</Tree>
+```
+data_analyzer/
+└── src/
+    ├── analyzer.py   # Core statistical analysis engine
+    ├── gui.py        # tkinter graphical interface
+    └── main.py       # Entry point (reserved)
+```
 
 ## Next steps
 
-<Columns cols={3}>
+<CardGroup cols={3}>
   <Card title="Quickstart" icon="rocket" href="/quickstart">
     Install dependencies and run Data Analyzer in under five minutes.
   </Card>
@@ -94,4 +94,4 @@ The output is formatted using `tabulate` with the `grid` style, producing an ali
   <Card title="Reference" icon="code" href="/reference/analyzer">
     Full documentation for the `analyzer.py` and `gui.py` modules.
   </Card>
-</Columns>
+</CardGroup>
