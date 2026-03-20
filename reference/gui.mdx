@@ -1,0 +1,175 @@
+---
+title: 'gui'
+description: 'API reference for the DataAnalyzerApp class — the tkinter graphical interface for Data Analyzer.'
+keywords: ['gui', 'tkinter', 'DataAnalyzerApp', 'csv', 'desktop', 'api reference']
+---
+
+The `gui` module (`src/gui.py`) provides the desktop graphical interface for Data Analyzer. It is built with [tkinter](https://docs.python.org/3/library/tkinter.html) and coordinates file loading, analysis options, and result display.
+
+```python
+import tkinter as tk
+from tkinter import filedialog, messagebox
+from tkinter.scrolledtext import ScrolledText
+import pandas as pd
+from analyzer import generar_resumen_estadistico
+```
+
+---
+
+## `DataAnalyzerApp`
+
+The main application class. Manages the root window and all user interaction.
+
+### Constructor: `__init__(self, ventana)`
+
+Initializes the application and builds the main window UI.
+
+<ParamField path="ventana" type="tk.Tk" required>
+  The root tkinter window instance. The constructor sets its title to `"Data Analyzer - By Edwin Gil"` and its geometry to `"400x300"`.
+</ParamField>
+
+The constructor creates the following widgets in order:
+
+| Widget | Type | Description |
+|--------|------|-------------|
+| `self.etiqueta` | `tk.Label` | Static label: `"Carga un archivo CSV para analizar:"` |
+| `self.boton_cargar` | `tk.Button` | `"Cargar CSV"` button — triggers `cargar_csv()` |
+| `self.cuadro_texto` | `ScrolledText` | Scrollable text area (`width=140`, `height=50`) for displaying results |
+
+#### Usage example
+
+```python launching the app
+import tkinter as tk
+from gui import DataAnalyzerApp
+
+ventana = tk.Tk()
+app = DataAnalyzerApp(ventana)
+ventana.mainloop()
+```
+
+<Tip>
+  This is identical to the module's built-in entry point. You can also run the GUI directly from the command line with `python src/gui.py`.
+</Tip>
+
+---
+
+## Methods
+
+### `cargar_csv()`
+
+Opens a native file dialog to select a CSV file, reads it into a DataFrame, and triggers the analysis options dialog.
+
+Behavior:
+
+- Calls `filedialog.askopenfilename()` filtered to `*.csv` files.
+- On selection: reads the file with `pd.read_csv()`, stores it as `self.df`, then calls `mostrar_opciones_analisis()`.
+- On read error: shows a `messagebox.showerror` dialog with the exception message.
+- On cancellation (no file selected): shows a `messagebox.showwarning` dialog.
+
+```python triggering programmatically
+app.cargar_csv()  # Opens the file picker dialog
+```
+
+<Note>
+  `cargar_csv` is bound to `self.boton_cargar`. It is not typically called directly outside the widget callback.
+</Note>
+
+---
+
+### `mostrar_opciones_analisis()`
+
+Displays a data preview and opens a `Toplevel` dialog with analysis options.
+
+Behavior:
+
+1. Clears `self.cuadro_texto` and inserts `"Vista previa de los datos cargados:\n"` followed by `str(self.df.head())`.
+2. Opens a `tk.Toplevel` window titled `"Opciones de Análisis"` at geometry `"300x150"`.
+3. The dialog contains two buttons:
+   - **"Analizar todo el archivo"** — calls `analizar_todo()` and closes the dialog.
+   - **"Seleccionar columnas"** — calls `mostrar_selector_columnas()` and closes the dialog.
+
+<Warning>
+  This method requires `self.df` to be set. It must only be called after a CSV has been successfully loaded via `cargar_csv()`.
+</Warning>
+
+---
+
+### `analizar_todo()`
+
+Runs a statistical summary on the entire loaded DataFrame and displays the result.
+
+Behavior:
+
+1. Calls `generar_resumen_estadistico(self.df)` (from `analyzer.py`).
+2. Clears `self.cuadro_texto`.
+3. Inserts `"Análisis Estadístico (todo el archivo):\n"` followed by the formatted summary table.
+
+```python example output in text pane
+# Análisis Estadístico (todo el archivo):
+# +--------+-------+------+------+------+------+------+
+# |        | count | mean | std  | min  | 25%  | max  |
+# +========+=======+======+======+======+======+======+
+# | price  | 100.0 | 42.5 | 11.2 | 12.0 | 35.0 | 89.0 |
+# +--------+-------+------+------+------+------+------+
+```
+
+---
+
+### `mostrar_selector_columnas()`
+
+Opens a column selection dialog with a checkbox per DataFrame column. Runs a filtered analysis on confirmation.
+
+Behavior:
+
+1. Opens a `tk.Toplevel` window titled `"Seleccionar Columnas"` at geometry `"300x400"`.
+2. Creates one `tk.Checkbutton` per column in `self.df.columns`, anchored left.
+3. An **"Analizar selección"** button calls `confirmar_columnas()`, which:
+   - Collects all columns whose `BooleanVar` is `True`.
+   - If at least one column is selected: filters the DataFrame, calls `generar_resumen_estadistico()` on the subset, and displays the result in `self.cuadro_texto`.
+   - If no column is selected: shows a `messagebox.showwarning`.
+   - Closes the Toplevel window regardless of outcome.
+
+```python expected text pane output (filtered)
+# Análisis Estadístico (columnas seleccionadas):
+# +---------+-------+------+------+------+
+# |         | count | mean | std  | max  |
+# +=========+=======+======+======+======+
+# | revenue | 50.0  | 82.4 | 19.1 | 120.0|
+# +---------+-------+------+------+------+
+```
+
+<Tip>
+  Column selection is useful when the CSV has many columns and you only need statistics for a specific subset.
+</Tip>
+
+---
+
+## Entry point
+
+The module includes a standard entry point to launch the application directly:
+
+```python src/gui.py (entry point)
+if __name__ == "__main__":
+    ventana = tk.Tk()
+    app = DataAnalyzerApp(ventana)
+    ventana.mainloop()
+```
+
+Run from the command line:
+
+```bash
+python src/gui.py
+```
+
+---
+
+## Related
+
+<Columns cols={2}>
+  <Card title="analyzer reference" icon="code" href="/reference/analyzer">
+    Reference for `generar_resumen_estadistico` and `analizar_csv` — the functions called by this GUI.
+  </Card>
+  <Card title="Getting started" icon="rocket" href="/">
+    Install dependencies and run Data Analyzer for the first time.
+  </Card>
+</Columns>

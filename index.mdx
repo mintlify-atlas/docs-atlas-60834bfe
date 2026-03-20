@@ -1,97 +1,67 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Data Analyzer"
+description: "A Python desktop application for statistical analysis of CSV files with a graphical interface."
 ---
 
-## Setting up
-
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Install dependencies and run your first CSV analysis in minutes.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Loading CSV Files" icon="file-csv" href="/guides/loading-csv">
+    Learn how to load and preview CSV data in the application.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Statistical Analysis" icon="chart-bar" href="/guides/statistical-analysis">
+    Generate descriptive statistics across all columns or a selection.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="API Reference" icon="code" href="/reference/analyzer">
+    Explore the core Python functions powering the analysis engine.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## What is Data Analyzer?
 
-Everything you need to create world-class documentation.
+Data Analyzer is a lightweight Python desktop application that lets you load CSV files and instantly generate descriptive statistical summaries. Built with `pandas` for data processing and `tkinter` for the graphical interface, it requires no programming knowledge to use.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+<Info>
+  Data Analyzer is a desktop GUI application — it runs locally on your machine, not in a browser or server.
+</Info>
 
-## Need inspiration?
+## Key features
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<CardGroup cols={2}>
+  <Card title="CSV file loading" icon="upload">
+    Use the file dialog to browse and load any CSV file from your system.
+  </Card>
+  <Card title="Data preview" icon="table">
+    See the first rows of your dataset immediately after loading.
+  </Card>
+  <Card title="Full-file analysis" icon="magnifying-glass-chart">
+    Analyze all columns at once — numeric and categorical — with a single click.
+  </Card>
+  <Card title="Column selection" icon="list-check">
+    Choose specific columns to narrow your analysis to what matters.
+  </Card>
+  <Card title="Descriptive statistics" icon="sigma">
+    Get count, mean, standard deviation, min, max, and percentiles for every column.
+  </Card>
+  <Card title="Scrollable results" icon="scroll">
+    Navigate large statistical outputs easily in the built-in scrollable text pane.
+  </Card>
+</CardGroup>
+
+## How it works
+
+<Steps>
+  <Step title="Launch the application">
+    Run `python src/gui.py` from the project directory to open the GUI window.
+  </Step>
+  <Step title="Load a CSV file">
+    Click **Cargar CSV** and select your file from the file dialog.
+  </Step>
+  <Step title="Choose analysis type">
+    Select **Analizar todo el archivo** to analyze all columns, or **Seleccionar columnas** to pick specific ones.
+  </Step>
+  <Step title="Review results">
+    The statistical summary appears in the scrollable text area, formatted as a readable grid table.
+  </Step>
+</Steps>

@@ -1,0 +1,97 @@
+---
+title: "Introduction"
+description: "Learn what Data Analyzer is, how it works, and who it is built for."
+keywords: ["data analyzer", "csv", "statistical analysis", "python", "pandas", "tkinter"]
+---
+
+Data Analyzer is a lightweight Python desktop application that loads CSV files and generates descriptive statistical summaries through a graphical interface. It is built for anyone who needs quick, structured insights from tabular data — without writing a single line of code.
+
+## Who it is for
+
+Data Analyzer is designed for:
+
+- **Data analysts** who want to inspect a new dataset immediately, before committing to a full analysis pipeline.
+- **Students** learning statistics or data science who need a simple tool to explore real datasets.
+- **Non-programmers** — researchers, educators, business users — who work with CSV exports from spreadsheets, databases, or instruments and want summary statistics without opening a terminal.
+
+If your data fits in a CSV file and you want to understand its shape, distribution, and key metrics in seconds, Data Analyzer is the right tool.
+
+## How it works
+
+The application is split into two modules that work together:
+
+<Columns cols={2}>
+  <Card title="analyzer.py" icon="flask" href="/reference/analyzer">
+    Core logic module. Contains the statistical engine built on pandas. Can also be used as a standalone Python library without the GUI.
+  </Card>
+  <Card title="gui.py" icon="desktop" href="/reference/gui">
+    Graphical interface module built with tkinter. Handles file selection, data preview, analysis options, and result display.
+  </Card>
+</Columns>
+
+When you load a CSV file through the GUI, `gui.py` reads it into a pandas DataFrame and passes it to `analyzer.py`, which runs `describe(include='all')` and returns a formatted grid table. The result is displayed in a scrollable text area inside the application window.
+
+## Technologies
+
+| Library | Role |
+|---|---|
+| [Python 3](https://www.python.org/) | Runtime language |
+| [pandas](https://pandas.pydata.org/) | Data loading and statistical computation |
+| [tkinter](https://docs.python.org/3/library/tkinter.html) | Desktop GUI framework (bundled with Python) |
+| [tabulate](https://github.com/astanin/python-tabulate) | Formats statistical output as a readable grid table |
+
+## Statistics generated
+
+Data Analyzer calls `pandas.DataFrame.describe(include='all')`, which computes different metrics depending on the column type.
+
+### Numeric columns
+
+| Statistic | Description |
+|---|---|
+| `count` | Number of non-null values |
+| `mean` | Arithmetic average |
+| `std` | Standard deviation |
+| `min` | Minimum value |
+| `25%` | First quartile |
+| `50%` | Median |
+| `75%` | Third quartile |
+| `max` | Maximum value |
+
+### Categorical columns
+
+| Statistic | Description |
+|---|---|
+| `count` | Number of non-null values |
+| `unique` | Number of distinct values |
+| `top` | Most frequent value |
+| `freq` | Frequency of the most common value |
+
+The output is formatted using `tabulate` with the `grid` style, producing an aligned table that is easy to read in the scrollable text pane.
+
+<Note>
+  Columns that are neither purely numeric nor purely categorical will show a mix of the applicable fields, with `NaN` where a statistic does not apply.
+</Note>
+
+## Project structure
+
+<Tree>
+  <Tree.Folder name="src" defaultOpen>
+    <Tree.File name="analyzer.py" />
+    <Tree.File name="gui.py" />
+  </Tree.Folder>
+  <Tree.File name="requirements.txt" />
+</Tree>
+
+## Next steps
+
+<Columns cols={3}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Install dependencies and run Data Analyzer in under five minutes.
+  </Card>
+  <Card title="Guides" icon="book-open" href="/guides/loading-csv">
+    Step-by-step walkthroughs for loading files, running analyses, and selecting columns.
+  </Card>
+  <Card title="Reference" icon="code" href="/reference/analyzer">
+    Full documentation for the `analyzer.py` and `gui.py` modules.
+  </Card>
+</Columns>

@@ -1,0 +1,140 @@
+---
+title: 'analyzer'
+description: 'API reference for the analyzer module — the core statistical analysis engine of Data Analyzer.'
+keywords: ['analyzer', 'csv', 'statistics', 'pandas', 'tabulate', 'api reference']
+---
+
+The `analyzer` module (`src/analyzer.py`) is the core analysis engine. It reads CSV files and computes descriptive statistics using [pandas](https://pandas.pydata.org/) and [tabulate](https://pypi.org/project/tabulate/).
+
+```python
+import pandas as pd
+from tabulate import tabulate
+```
+
+---
+
+## `generar_resumen_estadistico(df)`
+
+Generates a formatted statistical summary table from a pandas DataFrame. Computes descriptive statistics for **all column types** (numeric, categorical, datetime) using `df.describe(include='all')`, transposes the result, and formats it as a plain-text grid table.
+
+<Note>
+  This function never raises an exception. If an error occurs during analysis, it returns an error message string instead.
+</Note>
+
+### Parameters
+
+<ParamField path="df" type="pd.DataFrame" required>
+  A pandas DataFrame to analyze. All columns are included regardless of dtype.
+</ParamField>
+
+### Returns
+
+<ResponseField name="result" type="str">
+  A formatted grid table string produced by `tabulate(..., headers='keys', tablefmt='grid')`. Each row corresponds to a column in the original DataFrame, with statistics such as `count`, `mean`, `std`, `min`, `max`, and frequency counts for non-numeric columns.
+
+  On failure, returns the string `"Error al generar análisis estadístico: {e}"` where `{e}` is the exception message.
+</ResponseField>
+
+### Examples
+
+```python basic usage
+import pandas as pd
+from analyzer import generar_resumen_estadistico
+
+df = pd.read_csv("sales.csv")
+resumen = generar_resumen_estadistico(df)
+print(resumen)
+```
+
+```python mixed column types
+import pandas as pd
+from analyzer import generar_resumen_estadistico
+
+df = pd.DataFrame({
+    "name": ["Alice", "Bob", "Charlie"],
+    "score": [85.0, 92.5, 78.3],
+    "passed": [True, True, False],
+})
+
+print(generar_resumen_estadistico(df))
+# +--------+-------+---------+------+------+------+------+------+------+
+# |        | count | unique  | top  | freq | mean | std  | min  | max  |
+# +========+=======+=========+======+======+======+======+======+======+
+# | name   | 3     | 3       | ...  | 1    | nan  | nan  | nan  | nan  |
+# +--------+-------+---------+------+------+------+------+------+------+
+# | score  | 3.0   | nan     | nan  | nan  | 85.27| 7.13 | 78.3 | 92.5 |
+# +--------+-------+---------+------+------+------+------+------+------+
+# | passed | 3     | 2       | True | 2    | nan  | nan  | nan  | nan  |
+# +--------+-------+---------+------+------+------+------+------+------+
+```
+
+<Tip>
+  Because `include='all'` is passed to `df.describe()`, columns that would normally be excluded (such as object/string columns) are included in the summary. Numeric-only statistics like `mean` will show `NaN` for non-numeric columns.
+</Tip>
+
+---
+
+## `analizar_csv(ruta_archivo)`
+
+Reads a CSV file from disk and returns a formatted statistical summary. This is a convenience wrapper around `generar_resumen_estadistico()` that handles file I/O.
+
+<Warning>
+  This function returns `None` on failure and prints the error to stdout. It does **not** raise an exception. Always check the return value before using the result.
+</Warning>
+
+### Parameters
+
+<ParamField path="ruta_archivo" type="str" required>
+  Absolute or relative path to a `.csv` file. Passed directly to `pd.read_csv()`.
+</ParamField>
+
+### Returns
+
+<ResponseField name="result" type="str | None">
+  The formatted grid table string from `generar_resumen_estadistico()` on success. Returns `None` if the file cannot be read (e.g., file not found, malformed CSV, permission error).
+</ResponseField>
+
+### Examples
+
+```python basic usage
+from analyzer import analizar_csv
+
+resumen = analizar_csv("data/sales.csv")
+if resumen is not None:
+    print(resumen)
+else:
+    print("Analysis failed.")
+```
+
+```python absolute path
+from analyzer import analizar_csv
+
+resumen = analizar_csv("/home/user/datasets/census.csv")
+if resumen:
+    print(resumen)
+```
+
+```python error handling
+from analyzer import analizar_csv
+
+resumen = analizar_csv("nonexistent.csv")
+# Prints: "Error al analizar el archivo CSV: [Errno 2] No such file or directory: 'nonexistent.csv'"
+assert resumen is None
+```
+
+<Note>
+  `analizar_csv` is used by the command-line path. The GUI (`gui.py`) reads the CSV independently with `pd.read_csv()` and calls `generar_resumen_estadistico()` directly, passing the DataFrame.
+</Note>
+
+---
+
+## Related
+
+<Columns cols={2}>
+  <Card title="GUI reference" icon="window" href="/reference/gui">
+    Reference for `DataAnalyzerApp` — the tkinter interface that calls these functions.
+  </Card>
+  <Card title="Getting started" icon="rocket" href="/">
+    Install dependencies and run Data Analyzer for the first time.
+  </Card>
+</Columns>

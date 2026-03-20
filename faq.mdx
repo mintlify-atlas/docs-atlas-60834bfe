@@ -1,0 +1,312 @@
+---
+title: "FAQ"
+description: "Answers to common questions about installing, running, and using Data Analyzer."
+keywords: ["faq", "troubleshooting", "installation", "csv", "pandas", "tkinter", "python"]
+sidebarTitle: "FAQ"
+---
+
+## Installation & setup
+
+<AccordionGroup>
+  <Accordion title="What Python version is required?">
+    Data Analyzer requires **Python 3.8 or later**. Earlier versions are not supported because the application relies on `pandas` features and f-string syntax introduced in Python 3.6+, and active maintenance targets 3.8+.
+
+    Check your version by running:
+
+    ```bash
+    python --version
+    ```
+
+    If your system uses `python3` explicitly:
+
+    ```bash
+    python3 --version
+    ```
+  </Accordion>
+
+  <Accordion title="Does tkinter need to be installed separately?">
+    On most platforms, `tkinter` ships with the standard Python installation and requires no separate install. However, some Linux distributions strip it from the default Python package.
+
+    Verify that `tkinter` is available:
+
+    ```bash
+    python -m tkinter
+    ```
+
+    If a small test window appears, `tkinter` is working. If you get a `ModuleNotFoundError`, install the system package for your distribution:
+
+    <Tabs>
+      <Tab title="Debian / Ubuntu">
+        ```bash
+        sudo apt install python3-tk
+        ```
+      </Tab>
+      <Tab title="Fedora">
+        ```bash
+        sudo dnf install python3-tkinter
+        ```
+      </Tab>
+      <Tab title="Arch Linux">
+        ```bash
+        sudo pacman -S tk
+        ```
+      </Tab>
+    </Tabs>
+
+    On **Windows** and **macOS**, `tkinter` is bundled with the official Python installer from [python.org](https://www.python.org/downloads/) and no extra step is needed.
+  </Accordion>
+
+  <Accordion title="How do I install pandas and tabulate?">
+    Both dependencies are installed with `pip`. From your terminal, run:
+
+    ```bash
+    pip install pandas tabulate
+    ```
+
+    If your project uses a `requirements.txt` file, install everything at once:
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+    To avoid conflicts with other projects, install inside a virtual environment:
+
+    ```bash
+    python -m venv .venv
+    source .venv/bin/activate      # macOS / Linux
+    .venv\Scripts\activate         # Windows
+    pip install pandas tabulate
+    ```
+  </Accordion>
+
+  <Accordion title="Does this work on Windows, macOS, and Linux?">
+    Yes. The application uses only cross-platform libraries — `pandas`, `tabulate`, and `tkinter` — so it runs on Windows, macOS, and Linux without any platform-specific configuration.
+
+    The file dialog in `cargar_csv()` uses `tkinter.filedialog.askopenfilename`, which renders the native OS file picker on each platform.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Using the application
+
+<AccordionGroup>
+  <Accordion title="How do I open the application?">
+    Navigate to the `src/` directory and run `gui.py` with Python:
+
+    ```bash
+    python src/gui.py
+    ```
+
+    The application window titled **"Data Analyzer - By Edwin Gil"** will open at 400×300 pixels. From there, use the file-loading button to select a CSV file.
+  </Accordion>
+
+  <Accordion title="My CSV file isn't appearing in the file dialog — what's wrong?">
+    The file dialog in `cargar_csv()` is configured to filter for `*.csv` files only:
+
+    ```python
+    ruta_archivo = filedialog.askopenfilename(
+        filetypes=[("Archivos CSV", "*.csv")],
+        title="Seleccionar archivo CSV"
+    )
+    ```
+
+    If your file does not appear, check the following:
+
+    - The file has a `.csv` extension (not `.CSV`, `.tsv`, `.txt`, or `.xlsx`).
+    - You are browsing the correct directory in the dialog.
+    - On some systems, the filter is case-sensitive — rename the file to use a lowercase `.csv` extension if needed.
+
+    If you dismiss the dialog without selecting a file, the application displays a **"No se seleccionó ningún archivo."** warning and does nothing else. This is expected behavior.
+  </Accordion>
+
+  <Accordion title='I get "No se pudo leer el archivo" — what does that mean?'>
+    This error message means `pandas.read_csv()` raised an exception while trying to parse your file. Common causes:
+
+    | Cause | How to fix |
+    |---|---|
+    | File is not valid CSV (e.g., it's an Excel `.xlsx` file with a `.csv` extension) | Open the file in a spreadsheet app and re-export it as CSV |
+    | File uses a non-standard delimiter (semicolon, tab, pipe) | The current version reads comma-delimited files only |
+    | File is empty | Add at least a header row and one data row |
+    | File is open and locked by another program | Close the file in the other application and try again |
+    | File path contains special characters on some systems | Move the file to a path without accented letters or special symbols |
+
+    The full Python exception message is included after the colon in the dialog, which can help diagnose less common causes.
+  </Accordion>
+
+  <Accordion title="Can I load multiple CSV files at once?">
+    No. The current version supports loading one file per session. Each call to `cargar_csv()` replaces `self.df` with the DataFrame from the newly selected file.
+
+    To analyze multiple files, you can use `analizar_csv()` directly in a Python script without the GUI:
+
+    ```python
+    from analyzer import analizar_csv
+
+    files = ["data/sales.csv", "data/inventory.csv", "data/returns.csv"]
+    for path in files:
+        print(f"\n--- {path} ---")
+        print(analizar_csv(path))
+    ```
+  </Accordion>
+
+  <Accordion title="How do I scroll through long analysis results?">
+    The results panel uses `tkinter.scrolledtext.ScrolledText`, which provides a scrollable text area with a built-in vertical scrollbar. Scroll with:
+
+    - **Mouse wheel** — scroll up and down.
+    - **Scrollbar drag** — click and drag the scrollbar on the right edge of the results pane.
+    - **Keyboard** — use the arrow keys, `Page Up`, `Page Down`, `Home`, and `End` when the text area is focused.
+
+    The width of the panel is fixed at 400 pixels. For wide tables with many columns, horizontal scrolling is not provided; consider reducing the number of columns you analyze if readability is a concern.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Understanding the results
+
+<AccordionGroup>
+  <Accordion title="What does `NaN` mean in the results?">
+    `NaN` stands for **Not a Number** — pandas's representation of a missing or inapplicable value. In the statistical summary, `NaN` appears when a statistic does not apply to a particular column type.
+
+    For example, `mean` and `std` are computed only for numeric columns. When `describe(include='all')` is called on a DataFrame that contains both numeric and text columns, the resulting transposed summary fills non-applicable cells with `NaN`:
+
+    | column | mean | std | top | freq |
+    |---|---|---|---|---|
+    | age | 34.2 | 8.1 | NaN | NaN |
+    | city | NaN | NaN | London | 42 |
+
+    `NaN` in the output does not mean your data is corrupt — it simply means that statistic is not defined for that column's data type.
+  </Accordion>
+
+  <Accordion title="Why does my numeric column show `unique`, `top`, `freq` instead of `mean`?">
+    This happens when pandas has inferred the column as an **object (string) dtype** rather than a numeric type. Common causes:
+
+    - The column contains non-numeric values mixed in (e.g., `"N/A"`, `"-"`, `"unknown"`).
+    - The column uses a locale-specific decimal separator such as a comma (`1.234,56`) instead of a period (`1234.56`).
+    - The entire column is quoted strings in the CSV (e.g., `"42"` instead of `42`).
+
+    To verify the inferred dtype, inspect your file or run a quick check:
+
+    ```python
+    import pandas as pd
+    df = pd.read_csv("your_file.csv")
+    print(df.dtypes)
+    ```
+
+    If the column should be numeric, clean the data first (remove non-numeric entries and standardize the decimal format) before loading it into Data Analyzer.
+  </Accordion>
+
+  <Accordion title="Why does my text column not show `mean` or `std`?">
+    Text (object) columns do not have a mathematical mean or standard deviation. pandas does not compute those statistics for non-numeric data, so those fields are `NaN` in the summary.
+
+    For text columns, `describe(include='all')` computes:
+
+    | Statistic | Meaning |
+    |---|---|
+    | `count` | Number of non-null values |
+    | `unique` | Number of distinct values |
+    | `top` | The most frequently occurring value |
+    | `freq` | How many times `top` appears |
+
+    This behavior is intentional and correct. If you need numeric statistics for a text column (e.g., string lengths), you would need to transform the column first, which is outside the scope of Data Analyzer's current feature set.
+  </Accordion>
+
+  <Accordion title="What does `describe(include='all')` include?">
+    The core of `generar_resumen_estadistico()` calls:
+
+    ```python
+    resumen = df.describe(include='all').transpose()
+    ```
+
+    Passing `include='all'` tells pandas to include every column in the DataFrame regardless of dtype, rather than only numeric columns (the default behavior). The result is transposed so that each row in the output table corresponds to one column from your CSV.
+
+    The statistics returned depend on each column's dtype:
+
+    - **Numeric columns (`int64`, `float64`)** — `count`, `mean`, `std`, `min`, `25%`, `50%`, `75%`, `max`.
+    - **Categorical / object columns** — `count`, `unique`, `top`, `freq`.
+    - **Datetime columns** — `count`, `unique`, `top`, `freq`, `first`, `last`.
+
+    Cells that do not apply to a given dtype are filled with `NaN`. The table is then formatted with `tabulate` using the `grid` style for aligned, readable output.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Programmatic use
+
+<AccordionGroup>
+  <Accordion title="Can I use the analysis functions without the GUI?">
+    Yes. `analyzer.py` has no dependency on `gui.py` or `tkinter` and can be imported directly into any Python script or notebook.
+
+    **Analyze a file by path:**
+
+    ```python
+    from analyzer import analizar_csv
+
+    result = analizar_csv("data/sales.csv")
+    print(result)
+    ```
+
+    **Analyze a DataFrame you already have in memory:**
+
+    ```python
+    import pandas as pd
+    from analyzer import generar_resumen_estadistico
+
+    df = pd.read_csv("data/sales.csv")
+    # Filter to specific columns before analyzing
+    summary = generar_resumen_estadistico(df[["revenue", "units", "region"]])
+    print(summary)
+    ```
+
+    Both functions return a formatted string. `analizar_csv()` handles file I/O; `generar_resumen_estadistico()` accepts any DataFrame directly.
+  </Accordion>
+
+  <Accordion title="What does `analizar_csv()` return if the file doesn't exist?">
+    If the file path does not exist or cannot be read, `analizar_csv()` catches the exception, prints an error message to `stdout`, and returns `None`:
+
+    ```python
+    def analizar_csv(ruta_archivo):
+        try:
+            df = pd.read_csv(ruta_archivo)
+            return generar_resumen_estadistico(df)
+        except Exception as e:
+            print(f"Error al analizar el archivo CSV: {e}")
+            return None
+    ```
+
+    Always check the return value before using it:
+
+    ```python
+    result = analizar_csv("data/missing.csv")
+    if result is None:
+        print("Analysis failed — check that the file exists and is a valid CSV.")
+    else:
+        print(result)
+    ```
+  </Accordion>
+
+  <Accordion title="How do I analyze only specific columns programmatically?">
+    Use `generar_resumen_estadistico()` directly and pass a column-filtered DataFrame:
+
+    ```python
+    import pandas as pd
+    from analyzer import generar_resumen_estadistico
+
+    df = pd.read_csv("data/customers.csv")
+
+    # Analyze only numeric columns
+    summary = generar_resumen_estadistico(df.select_dtypes(include="number"))
+    print(summary)
+    ```
+
+    ```python
+    # Analyze a specific list of columns
+    columns = ["age", "income", "city"]
+    summary = generar_resumen_estadistico(df[columns])
+    print(summary)
+    ```
+
+    `generar_resumen_estadistico()` accepts any `pandas.DataFrame`, so any standard pandas selection or filtering operation works before passing the DataFrame in.
+  </Accordion>
+</AccordionGroup>

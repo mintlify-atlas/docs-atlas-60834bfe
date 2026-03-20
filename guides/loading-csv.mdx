@@ -1,0 +1,104 @@
+---
+title: "Loading a CSV file"
+description: "How to open a CSV file in Data Analyzer, what happens at each step, and how to handle errors."
+keywords: ["csv", "load", "file dialog", "cargar csv", "pandas", "read_csv"]
+---
+
+Data Analyzer reads CSV files into a pandas DataFrame and immediately displays a preview of the first five rows. This page walks through how the file-loading flow works, what can go wrong, and how to use the same logic programmatically.
+
+## How loading works
+
+The **Cargar CSV** button in the main window triggers `cargar_csv()` in `gui.py`. That method opens a native OS file dialog filtered to `.csv` files, reads the selected file with `pd.read_csv()`, stores the result in `self.df`, and then calls `mostrar_opciones_analisis()` to show a preview and present analysis options.
+
+## Step-by-step
+
+<Steps>
+  <Step title="Click Cargar CSV">
+    In the main application window, click the **Cargar CSV** button. The OS file picker opens, filtered to show only `.csv` files.
+  </Step>
+  <Step title="Select a file">
+    Browse to your CSV file and confirm the selection. Only files with the `.csv` extension are shown by the filter, though you can change the filter in the dialog if needed.
+  </Step>
+  <Step title="Data is read">
+    Data Analyzer calls `pd.read_csv(ruta_archivo)` on the selected path. pandas reads the file into a DataFrame and stores it as `self.df`.
+  </Step>
+  <Step title="Preview appears">
+    The scrollable text pane updates with a preview header followed by `self.df.head()` — the first five rows of your data. At the same time, an **Analysis Options** window opens so you can choose what to do next.
+  </Step>
+</Steps>
+
+## What happens when things go wrong
+
+<AccordionGroup>
+  <Accordion title="You cancel the dialog">
+    If you close the file picker without selecting a file, `filedialog.askopenfilename()` returns an empty string. Data Analyzer detects this and shows a warning:
+
+    > **Cancelado** — No se seleccionó ningún archivo.
+
+    No data is loaded and the application stays in its previous state.
+  </Accordion>
+  <Accordion title="The file cannot be read">
+    If `pd.read_csv()` raises an exception — for example, because the file is malformed, uses an unexpected encoding, or is open in another program — Data Analyzer catches the error and shows:
+
+    > **Error** — No se pudo leer el archivo: \<error message\>
+
+    The exact pandas error message is included so you can diagnose the problem. No partial data is stored.
+  </Accordion>
+</AccordionGroup>
+
+## CSV format requirements
+
+Data Analyzer uses `pd.read_csv()` with default settings. For reliable results, your file should follow these conventions:
+
+| Requirement | Detail |
+|---|---|
+| Header row | The first row must contain column names. pandas uses these as the DataFrame column index. |
+| Comma separator | Values must be separated by commas. Semicolons, tabs, or pipes require additional pandas parameters not exposed by the GUI. |
+| Encoding | UTF-8 is the safest choice. Files exported from Excel may use `latin-1`; if loading fails, re-save the file as UTF-8 CSV. |
+| File extension | The dialog filter shows only `.csv` files. Rename the file if it uses a different extension. |
+| No merged cells | Each row must have the same number of fields as the header. Merged cells from spreadsheet exports will cause misaligned columns. |
+
+<Warning>
+  Files with BOM (byte order mark) characters at the start — common in Excel CSV exports — may cause the first column name to appear with a `\ufeff` prefix. Re-save the file as **UTF-8 without BOM** to avoid this.
+</Warning>
+
+## Example CSV structure
+
+The following file is a minimal example you can save as `sample.csv` and use to test the application:
+
+```csv sample.csv
+name,age,city,salary
+Alice,30,New York,72000
+Bob,25,Los Angeles,58000
+Carla,35,Chicago,91000
+David,28,Houston,64000
+Eva,42,Phoenix,83000
+```
+
+This file has two numeric columns (`age`, `salary`) and two text columns (`name`, `city`), which lets you see both numeric and categorical statistics in the output.
+
+## Programmatic alternative
+
+If you want to load and analyze a CSV file directly from Python — without opening the GUI — use `analizar_csv()` from `analyzer.py`:
+
+```python
+from analyzer import analizar_csv
+
+result = analizar_csv("sample.csv")
+if result:
+    print(result)
+```
+
+`analizar_csv()` calls `pd.read_csv()` internally and passes the resulting DataFrame straight to `generar_resumen_estadistico()`. It returns the formatted grid table as a string, or `None` if the file could not be read.
+
+<Tip>
+  You can also load the DataFrame yourself and call `generar_resumen_estadistico()` directly if you need more control over how the file is read — for example, to specify an encoding or a custom separator.
+
+  ```python
+  import pandas as pd
+  from analyzer import generar_resumen_estadistico
+
+  df = pd.read_csv("sample.csv", encoding="latin-1", sep=";")
+  print(generar_resumen_estadistico(df))
+  ```
+</Tip>

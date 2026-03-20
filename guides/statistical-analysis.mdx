@@ -1,0 +1,148 @@
+---
+title: "Statistical analysis"
+description: "Understand how Data Analyzer computes statistics, what each metric means, and how to run analysis programmatically."
+keywords: ["statistics", "describe", "mean", "std", "tabulate", "generar_resumen_estadistico", "pandas"]
+---
+
+Data Analyzer generates a descriptive statistical summary of your data using `pandas.DataFrame.describe(include='all')`. The result is formatted into a grid table using `tabulate` and displayed in the scrollable text pane. This page explains how the analysis works, what each statistic means, and how to use the analysis engine directly from Python.
+
+## How statistics are computed
+
+All statistical computation goes through a single function in `analyzer.py`:
+
+```python analyzer.py
+def generar_resumen_estadistico(df):
+    try:
+        resumen = df.describe(include='all').transpose()
+        return tabulate(resumen, headers='keys', tablefmt='grid')
+    except Exception as e:
+        return f"Error al generar análisis estadístico: {e}"
+```
+
+Three things happen:
+
+1. `df.describe(include='all')` computes statistics for every column, regardless of data type.
+2. `.transpose()` rotates the result so each row represents one column of your data (instead of one statistic), making wide datasets much easier to read.
+3. `tabulate(..., tablefmt='grid')` formats the transposed DataFrame as a fixed-width grid table with borders.
+
+## Two analysis modes in the GUI
+
+After loading a CSV file, an **Analysis Options** window appears with two choices:
+
+<Tabs>
+  <Tab title="Analyze the whole file">
+    Click **Analizar todo el archivo**. Data Analyzer calls `generar_resumen_estadistico(self.df)` on the full DataFrame — every row and every column is included in the summary.
+
+    This is the fastest way to get an overview of an unfamiliar dataset.
+  </Tab>
+  <Tab title="Select specific columns">
+    Click **Seleccionar columnas**. A column selection window opens with one checkbox per column. Check the columns you want, then click **Analizar selección**.
+
+    Data Analyzer builds a filtered DataFrame (`df[columnas_seleccionadas]`) and passes it to `generar_resumen_estadistico()`. Only the selected columns appear in the output.
+
+    See [Column selection](/guides/column-selection) for a full walkthrough.
+  </Tab>
+</Tabs>
+
+## What statistics are calculated
+
+The statistics computed depend on the data type of each column.
+
+### Numeric columns
+
+For columns with integer or float values, `describe()` computes:
+
+| Statistic | What it means |
+|---|---|
+| `count` | Number of non-null values. Use this to spot missing data — if `count` is less than the total number of rows, some values are missing. |
+| `mean` | The arithmetic average. Sensitive to outliers; compare with the median (`50%`) to detect skew. |
+| `std` | Standard deviation — how spread out the values are around the mean. A large `std` relative to `mean` indicates high variability. |
+| `min` | The smallest value in the column. |
+| `25%` | First quartile: 25% of values fall below this number. |
+| `50%` | Median: the middle value. Robust to outliers. |
+| `75%` | Third quartile: 75% of values fall below this number. |
+| `max` | The largest value in the column. |
+
+<Tip>
+  The interquartile range (IQR) is `75%` minus `25%`. A wide IQR suggests spread data; a narrow IQR suggests values cluster tightly around the median.
+</Tip>
+
+### Categorical (object) columns
+
+For text or mixed-type columns, `describe()` computes:
+
+| Statistic | What it means |
+|---|---|
+| `count` | Number of non-null values. |
+| `unique` | Number of distinct values. A `unique` equal to `count` means every value appears exactly once (like an ID column). |
+| `top` | The most frequently occurring value. |
+| `freq` | How many times `top` appears. |
+
+<Note>
+  Columns that are neither purely numeric nor purely categorical will show a mix of the applicable fields, with `NaN` displayed where a statistic does not apply to that data type.
+</Note>
+
+## Reading the output grid table
+
+The output uses the `grid` format from `tabulate`, which draws borders around every cell. Each row in the table represents one column from your CSV file. The column names from your CSV appear in the leftmost column.
+
+Example output for a CSV with `age` (numeric) and `city` (text) columns:
+
+```text
++--------+---------+--------------------+-----+------+------+------+------+------+------+--------+------+
+|        |   count |               mean | std |  min |  25% |  50% |  75% |  max | unique | top  | freq |
++========+=========+====================+=====+======+======+======+======+======+========+======+======+
+| age    |       5 |                 32 | ... |   25 |   28 |   30 |   35 |   42 |    nan | nan  |  nan |
++--------+---------+--------------------+-----+------+------+------+------+------+--------+------+------+
+| city   |       5 |                nan | nan |  nan |  nan |  nan |  nan |  nan |      4 | ...  |    1 |
++--------+---------+--------------------+-----+------+------+------+------+------+--------+------+------+
+```
+
+- `nan` appears where a statistic is not applicable for that column's data type.
+- All numeric statistics are `nan` for the `city` column; all categorical statistics are `nan` for the `age` column.
+
+## Error handling
+
+If `generar_resumen_estadistico()` encounters any exception during analysis, it returns an error string rather than raising:
+
+```python
+except Exception as e:
+    return f"Error al generar análisis estadístico: {e}"
+```
+
+The error message is returned as a plain string and displayed in the text pane. The most common cause is passing a DataFrame that has already been closed or is empty.
+
+## Programmatic usage
+
+<CodeGroup>
+
+```python Analyze a full CSV file
+from analyzer import analizar_csv
+
+result = analizar_csv("data.csv")
+if result:
+    print(result)
+```
+
+```python Analyze a DataFrame directly
+import pandas as pd
+from analyzer import generar_resumen_estadistico
+
+df = pd.read_csv("data.csv")
+print(generar_resumen_estadistico(df))
+```
+
+```python Analyze selected columns
+import pandas as pd
+from analyzer import generar_resumen_estadistico
+
+df = pd.read_csv("data.csv")
+df_subset = df[["age", "salary"]]
+print(generar_resumen_estadistico(df_subset))
+```
+
+</CodeGroup>
+
+<Info>
+  `analizar_csv()` is a convenience wrapper that reads the file and calls `generar_resumen_estadistico()` in one step. Use `generar_resumen_estadistico()` directly when you already have a DataFrame or need to filter columns before analysis.
+</Info>

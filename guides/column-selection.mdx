@@ -1,0 +1,105 @@
+---
+title: "Selecting columns"
+description: "How to focus statistical analysis on specific CSV columns using the column selection window."
+keywords: ["column selection", "filter", "checkbutton", "mostrar_selector_columnas", "dataframe", "subset"]
+---
+
+When a CSV file has many columns, or when columns have mixed data types that produce noisy output, you can limit the analysis to only the columns you care about. Data Analyzer provides a dedicated column selection window for this purpose.
+
+## How it works
+
+`mostrar_selector_columnas()` opens a `Toplevel` window that contains one `Checkbutton` per column in the loaded DataFrame. When you confirm your selection, it builds a filtered DataFrame using `df[columnas_seleccionadas]` and passes it directly to `generar_resumen_estadistico()`.
+
+## Step-by-step
+
+<Steps>
+  <Step title="Load a CSV file">
+    Click **Cargar CSV** and select a file. The Analysis Options window appears once the file loads successfully. See [Loading a CSV file](/guides/loading-csv) if you need help with this step.
+  </Step>
+  <Step title="Open column selection">
+    In the Analysis Options window, click **Seleccionar columnas**. The options window closes and the **Column Selection** window opens.
+  </Step>
+  <Step title="Check the columns you want">
+    A list of checkboxes appears — one for each column in your CSV. Check every column you want to include in the analysis. Unchecked columns are excluded entirely.
+  </Step>
+  <Step title="Click Analizar selección">
+    Click the **Analizar selección** button at the bottom of the window. Data Analyzer filters the DataFrame to the selected columns and runs the statistical analysis. The column selection window closes and the result appears in the main text pane.
+  </Step>
+</Steps>
+
+## What happens if no columns are selected
+
+If you click **Analizar selección** without checking any column, Data Analyzer shows a warning and keeps the column selection window open:
+
+> **Sin selección** — Debes seleccionar al menos una columna.
+
+No analysis is run. Check at least one column and try again.
+
+<Warning>
+  The column selection window does not remember previous selections. Each time you open it, all checkboxes start unchecked.
+</Warning>
+
+## How the filtered DataFrame is built
+
+The selected column names are collected into a list and used to index the original DataFrame:
+
+```python gui.py
+def confirmar_columnas():
+    columnas_seleccionadas = [col for col, var in seleccion.items() if var.get()]
+    if columnas_seleccionadas:
+        df_filtrado = self.df[columnas_seleccionadas]
+        resumen = generar_resumen_estadistico(df_filtrado)
+        self.cuadro_texto.delete(1.0, tk.END)
+        self.cuadro_texto.insert(tk.END, f"Análisis Estadístico (columnas seleccionadas):\n")
+        self.cuadro_texto.insert(tk.END, resumen)
+    else:
+        messagebox.showwarning("Sin selección", "Debes seleccionar al menos una columna.")
+    ventana_columnas.destroy()
+```
+
+`df[columnas_seleccionadas]` returns a new DataFrame containing only the chosen columns, with all original rows intact. The original `self.df` is not modified — you can open column selection again and choose a different set of columns.
+
+## Why select specific columns
+
+<Columns cols={2}>
+  <Card title="Focus your analysis" icon="crosshairs">
+    A dataset with 20 columns produces a wide, hard-to-read output. Selecting only the 3–5 columns relevant to your question makes the grid table much easier to scan.
+  </Card>
+  <Card title="Handle mixed data types" icon="shuffle">
+    Running `describe(include='all')` on a mix of numeric and text columns fills the table with `nan` values. Selecting only numeric columns gives a clean, gap-free output.
+  </Card>
+  <Card title="Compare column subsets" icon="layers">
+    Run analysis twice — once on a subset of columns before a data transformation, once after — to compare distributions side by side.
+  </Card>
+  <Card title="Large datasets" icon="database">
+    For CSV files with dozens of columns, a full analysis can produce hundreds of lines of output. Selecting a small subset keeps the result readable in the text pane.
+  </Card>
+</Columns>
+
+## Programmatic equivalent
+
+You can replicate column selection in Python by slicing the DataFrame before passing it to `generar_resumen_estadistico()`:
+
+```python
+import pandas as pd
+from analyzer import generar_resumen_estadistico
+
+df = pd.read_csv("data.csv")
+
+# Select specific columns
+columnas_seleccionadas = ["age", "salary"]
+df_filtrado = df[columnas_seleccionadas]
+
+print(generar_resumen_estadistico(df_filtrado))
+```
+
+<Tip>
+  To see all available column names before selecting, print `df.columns.tolist()` after loading the file.
+
+  ```python
+  import pandas as pd
+
+  df = pd.read_csv("data.csv")
+  print(df.columns.tolist())
+  ```
+</Tip>
